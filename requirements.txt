@@ -71,3 +71,8 @@ urllib3==2.0.4
 watchdog==3.0.0
 yarl==1.9.2
 zope.interface==5.5.2
+pip install djangorestframework
+pip install django-allauth
+pip install djangorestframework_simplejwt
+pip install dj-rest-auth
+pip install django-allauth[google]

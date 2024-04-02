@@ -1,16 +1,16 @@
 from django.urls import path
 from django.views.generic import TemplateView
 from cowork import views
-from .views import (
-    UploadFileView,
-    SwitchBranchView,
-    BranchList,
-    BranchDetail,
-    UploadedFileVersionList,
-    UploadedFileVersionDetail,
-    CommitList,
-    CommitDetail,
-)
+# from .views import (
+#     UploadFileView,
+#     SwitchBranchView,
+#     BranchList,
+#     BranchDetail,
+#     UploadedFileVersionList,
+#     UploadedFileVersionDetail,
+#     CommitList,
+#     CommitDetail,
+# )
 
 urlpatterns = [
     path("", TemplateView.as_view(template_name="base.html"), name='index'),
@@ -34,23 +34,32 @@ urlpatterns = [
     path('rooms/<int:room_id>/feature-requests/', views.FeatureRequestListCreateView.as_view(), name='feature-request-list-create'),
     path('rooms/<int:room_id>/feature-requests/<int:pk>/', views.FeatureRequestRetrieveUpdateDestroyView.as_view(), name='feature-request-retrieve-update-destroy'),
 
-    path('room/upload/file/<str:room_slug>/', UploadFileView.as_view(), name='upload_file'),
-    path('room/switch/branch/<str:room_slug>/<int:file_id>/<int:branch_id>/', SwitchBranchView.as_view(), name='switch_branch'),
 
-    # Branch endpoints
-    path('room/branches/<str:room_slug>/', BranchList.as_view(), name='branch_list'),
-    path('room/branches/<str:room_slug>/<int:pk>/', BranchDetail.as_view(), name='branch_detail'),
+    # Search 
+    path('search/', views.SearchAPIView.as_view(), name='search'),
 
-    # UploadedFileVersion endpoints
-    path('room/file_versions/<str:room_slug>/', UploadedFileVersionList.as_view(), name='file_version_list'),
-    path('room/file_versions/<str:room_slug>/<int:pk>/', UploadedFileVersionDetail.as_view(), name='file_version_detail'),
 
-    # Commit endpoints
-    path('room/commits/<str:room_slug>/', CommitList.as_view(), name='commit_list'),
-    path('room/commits/<str:room_slug>/<int:pk>/', CommitDetail.as_view(), name='commit_detail'),
+
+    path('notifications/', views.NotificationList.as_view(), name='notification-list'),
+    path('notifications/<int:pk>/', views.NotificationDetail.as_view(), name='notification-detail'),
+    path('notifications/<int:pk>/mark-as-read/', views.MarkNotificationAsRead.as_view(), name='mark-notification-as-read'),
+    # path('room/upload/file/<str:room_slug>/', UploadFileView.as_view(), name='upload_file'),
+    # path('room/switch/branch/<str:room_slug>/<int:file_id>/<int:branch_id>/', SwitchBranchView.as_view(), name='switch_branch'),
+
+    # # Branch endpoints
+    # path('room/branches/<str:room_slug>/', BranchList.as_view(), name='branch_list'),
+    # path('room/branches/<str:room_slug>/<int:pk>/', BranchDetail.as_view(), name='branch_detail'),
+
+    # # UploadedFileVersion endpoints
+    # path('room/file_versions/<str:room_slug>/', UploadedFileVersionList.as_view(), name='file_version_list'),
+    # path('room/file_versions/<str:room_slug>/<int:pk>/', UploadedFileVersionDetail.as_view(), name='file_version_detail'),
+
+    # # Commit endpoints
+    # path('room/commits/<str:room_slug>/', CommitList.as_view(), name='commit_list'),
+    # path('room/commits/<str:room_slug>/<int:pk>/', CommitDetail.as_view(), name='commit_detail'),
     
-    path('room/send/<str:room_slug>/', views.send_message, name='send-message'), 
-    path('room/get/<str:room_slug>/', views.get_message, name='get-message'),
+    # path('room/send/<str:room_slug>/', views.send_message, name='send-message'), 
+    # path('room/get/<str:room_slug>/', views.get_message, name='get-message'),
 ]
 
 

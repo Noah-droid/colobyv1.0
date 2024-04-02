@@ -1,21 +1,26 @@
 import string
 import random
 import mimetypes
-from serializers.serializers import UploadedFileSerializer, BranchSerializer, UploadedFileVersionSerializer, CommitSerializer
+# from serializers.serializers import UploadedFileSerializer, BranchSerializer, UploadedFileVersionSerializer, CommitSerializer
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, reverse, redirect, get_object_or_404
 from django.utils.text import slugify
 from django.utils.decorators import method_decorator
-from django.http import HttpResponse, Http404, FileResponse, HttpResponseBadRequest, HttpResponseForbidden
+from django.http import HttpResponse, Http404, FileResponse, HttpResponseBadRequest, HttpResponseForbidden, JsonResponse
 from django.urls import reverse
 from django.contrib import messages
 from rest_framework import status, generics, permissions, status, viewsets
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
+from django.core.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.renderers import JSONRenderer
 from rest_framework.views import APIView
+
+from django.core.paginator import Paginator
+from django.db.models import Q
+from django.core.exceptions import ValidationError
 from serializers.serializers import (
     TaskSerializer, CommentSerializer,
     SendMessageSerializer, ReceiveMessageSerializer,
@@ -23,15 +28,16 @@ from serializers.serializers import (
     # BranchSerializer,
     UserNoteSerializer,
     FeatureRequestSerializer,
+    NotificationSerializer
     # UploadedFileSerializer,
-    Commit, UploadedFileVersion
+    # Commit, UploadedFileVersion
 
 )
 from .models import (Task, Comment, Room, Message,
-                     UploadedFile,
+                    #  UploadedFile,
                      #  FileAccessLog,
-                     Branch,
-                     UserNote, FeatureRequest
+                    #  Branch,
+                     UserNote, FeatureRequest, Notification
                      )
 
 
@@ -122,6 +128,20 @@ class RoomCreateJoinView(APIView):
         else:
             # The provided slug does not match the actual slug
             return Response({"detail": "Invalid passcode for the room!"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        def delete_room(self, request):
+            room_slug = request.data.get("room_slug")
+            try:
+                room = Room.objects.get(slug=room_slug)
+            except Room.DoesNotExist:
+                return Response({"detail": "Room does not exist!"}, status=status.HTTP_404_NOT_FOUND)
+
+            if room.created_by == request.user:
+                room.delete()
+                return Response({"detail": "Room deleted successfully."}, status=status.HTTP_200_OK)
+            else:
+                return Response({"detail": "You are not the creator of this room, so you cannot delete it."},
+                            status=status.HTTP_403_FORBIDDEN)
 
 
 class RoomDetailView(APIView):
@@ -304,123 +324,78 @@ def like_room(request, room_slug):
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-class UploadFileView(generics.CreateAPIView):
-    queryset = UploadedFile.objects.all()
-    serializer_class = UploadedFileSerializer
-    parser_classes = (MultiPartParser, FormParser)
-    permission_classes = [permissions.IsAuthenticated]
 
-    def perform_create(self, serializer):
-        instance = serializer.save(uploaded_by=self.request.user)
-
-        # Get the room slug from the URL parameters
-        room_slug = self.kwargs.get('room_slug', None)
-
-        # Create initial commit for the master branch
-        room = get_object_or_404(Room, slug=room_slug)
-        master_branch = Branch.objects.get_or_create(
-            original_file=instance, created_by=self.request.user, room=room)[0]
-        commit = Commit.objects.create(
-            branch=master_branch,
-            uploader=self.request.user,
-            description="Initial commit"
-        )
-
-        # Create version for the master branch
-        UploadedFileVersion.objects.create(
-            uploaded_file=instance,
-            commit=commit,
-            file=instance.file,
-            description=instance.description,
-            file_size=instance.file_size
-        )
-
-
-class SwitchBranchView(APIView):
+class SearchAPIView(APIView):
     """
-    Switches to the specified branch.
-    """
-    permission_classes = [permissions.IsAuthenticated]
+    Performs a search across multiple models and returns results in JSON format.
 
-    def post(self, request, room_slug, file_id, branch_id):
+    Requires authentication.
+
+    Raises:
+        ValueError: If the 'q' query parameter is not provided in the request.
+    """
+    def get(self, request):
         try:
-            uploaded_file = get_object_or_404(
-                UploadedFile, id=file_id, room__slug=room_slug)
-            branch = get_object_or_404(
-                Branch, id=branch_id, original_file=uploaded_file)
+            query = request.GET.get('q', '')
+            if not query:
+                raise ValueError("The 'q' parameter is required.")
 
-            # Implement logic to switch to the specified branch
-            # For example, you can update the UploadedFile instance to use the latest version from the branch
-            latest_version = UploadedFileVersion.objects.filter(
-                uploaded_file=uploaded_file, commit__branch=branch).latest('commit__timestamp')
-            uploaded_file.file = latest_version.file
-            uploaded_file.description = latest_version.description
-            uploaded_file.file_size = latest_version.file_size
-            uploaded_file.save()
+            all_results = []
+            all_results.extend(Room.objects.filter(Q(name__icontains=query)))
+            # all_results.extend(UploadedFile.objects.filter(Q(file__icontains=query)))
+            # all_results.extend(Task.objects.filter(Q(title__icontains=query)))
+            # # all_results.extend(Branch.objects.filter(Q(original_file__icontains=query)))
+            # all_results.extend(Message.objects.filter(Q(message__icontains=query)))
 
-            return Response({"status": "Switched to branch successfully."}, status=status.HTTP_200_OK)
+            paginator = Paginator(all_results, 25)
+            page_number = request.GET.get('page', 1)
+            page_obj = paginator.get_page(page_number)
 
-        except UploadedFile.DoesNotExist:
-            raise Http404("File does not exist!")
-        except Branch.DoesNotExist:
-            raise Http404("Branch does not exist!")
-        except UploadedFileVersion.DoesNotExist:
-            raise Http404("File version not found!")
+            serialized_results = []
+            for result in page_obj:
+                if isinstance(result, Room):
+                    serialized_result = {'id': result.id, 'Room name': result.name}
+                # elif isinstance(result, UploadedFile):
+                #     serialized_result = {'id': result.id, 'file': result.file.name}
+                # elif isinstance(result, Task):
+                #     serialized_result = {'id': result.id, 'title': result.title}
+                # elif isinstance(result, Branch):
+                #     serialized_result = {'id': result.id, 'branch': result.original_file.file.name}
+                # elif isinstance(result, Message):
+                #     serialized_result = {'id': result.id, 'message': result.message}
+                else:
+                    serialized_result = {}
+                serialized_results.append(serialized_result)
+
+            return Response({'results': serialized_results}, status=status.HTTP_200_OK)
+
+        except ValidationError as ve:
+            return Response({'error': str(ve)}, status=status.HTTP_400_BAD_REQUEST)
+        
         except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({'error': f"An unexpected error occurred: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-class BranchList(generics.ListCreateAPIView):
-    serializer_class = BranchSerializer
-
-    def get_queryset(self):
-        # Get the room slug from the URL parameters
-        room_slug = self.kwargs.get('room_slug', None)
-        return Branch.objects.filter(original_file__room__slug=room_slug)
 
 
-class BranchDetail(generics.RetrieveUpdateDestroyAPIView):
-    serializer_class = BranchSerializer
 
-    def get_queryset(self):
-        # Get the room slug from the URL parameters
-        room_slug = self.kwargs.get('room_slug', None)
-        return Branch.objects.filter(original_file__room__slug=room_slug)
+class NotificationList(generics.ListAPIView):
+    queryset = Notification.objects.all()
+    serializer_class = NotificationSerializer
 
+class NotificationDetail(generics.RetrieveAPIView):
+    queryset = Notification.objects.all()
+    serializer_class = NotificationSerializer
 
-class UploadedFileVersionList(generics.ListAPIView):
-    serializer_class = UploadedFileVersionSerializer
+class MarkNotificationAsRead(generics.UpdateAPIView):
+    queryset = Notification.objects.all()
+    serializer_class = NotificationSerializer
 
-    def get_queryset(self):
-        # Get the room slug from the URL parameters
-        room_slug = self.kwargs.get('room_slug', None)
-        return UploadedFileVersion.objects.filter(uploaded_file__room__slug=room_slug)
-
-
-class UploadedFileVersionDetail(generics.RetrieveAPIView):
-    serializer_class = UploadedFileVersionSerializer
-
-    def get_queryset(self):
-        # Get the room slug from the URL parameters
-        room_slug = self.kwargs.get('room_slug', None)
-        return UploadedFileVersion.objects.filter(uploaded_file__room__slug=room_slug)
-
-
-class CommitList(generics.ListAPIView):
-    serializer_class = CommitSerializer
-
-    def get_queryset(self):
-        # Get the room slug from the URL parameters
-        room_slug = self.kwargs.get('room_slug', None)
-        return Commit.objects.filter(branch__original_file__room__slug=room_slug)
-
-
-class CommitDetail(generics.RetrieveAPIView):
-    serializer_class = CommitSerializer
-
-    def get_queryset(self):
-        # Get the room slug from the URL parameters
-        room_slug = self.kwargs.get('room_slug', None)
-        return Commit.objects.filter(branch__original_file__room__slug=room_slug)
-
-
+    def patch(self, request, *args, **kwargs):
+        try:
+            notification = self.get_object()
+            notification.is_read = True
+            notification.save()
+            return JsonResponse({'status': 'Notification marked as read.'}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return JsonResponse({'error': f"An unexpected error occurred: {str(e)}"}, status=500)

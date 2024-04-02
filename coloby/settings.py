@@ -31,6 +31,7 @@ INSTALLED_APPS = [
 
     "accounts",
     "cowork",
+    # "clob",
     # "commands",
     "rest_framework",
     "rest_framework.authtoken",
@@ -54,6 +55,7 @@ INSTALLED_APPS = [
     # "debug_toolbar"
 
 ]
+
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -171,9 +173,9 @@ REST_FRAMEWORK = {
 # SIMPLEJWT SETTINGS
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(days=7),
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=50),
     "SLIDING_TOKEN_REFRESH_LIFETIME": timedelta(days=1),
-    "SLIDING_TOKEN_LIFETIME": timedelta(days=7),
+    "SLIDING_TOKEN_LIFETIME": timedelta(days=60),
     "SLIDING_TOKEN_REFRESH_LIFETIME_GRACE_PERIOD": timedelta(days=1),
     "SLIDING_TOKEN_REFRESH_LIFETIME_ALLOWANCE": timedelta(days=1),
     "SLIDING_TOKEN_REFRESH_AFTER_LIFETIME": timedelta(days=1),

@@ -10,9 +10,9 @@ admin.site.register(Message)
 admin.site.register(Room)
 admin.site.register(Task)
 admin.site.register(Comment)
-admin.site.register(Branch)
-admin.site.register(UploadedFile)
+# admin.site.register(Branch)
+# admin.site.register(UploadedFile)
 # admin.site.register(FileAccessLog)
-admin.site.register(User)
+# admin.site.register(User)
 
 

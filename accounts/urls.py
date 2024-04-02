@@ -8,6 +8,7 @@ from accounts.views import (
     SignInAPIView, 
     ChangePasswordView,
     UpdateUserProfileView,
+    RefreshAccessTokenAPIView,
 )
 from . import views
 
@@ -23,6 +24,7 @@ urlpatterns = [
         auth_views.LogoutView.as_view(template_name="accounts/logout.html"),
         name="logout",
     ),
+    path('refresh-token/', RefreshAccessTokenAPIView.as_view(), name='refresh-token'),
     path('log-out/', LogoutView.as_view(), name="log-out"),
 
     # OAUTH LOGINS
