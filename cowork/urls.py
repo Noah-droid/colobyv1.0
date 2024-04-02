@@ -37,6 +37,12 @@ urlpatterns = [
 
     # Search 
     path('search/', views.SearchAPIView.as_view(), name='search'),
+
+
+
+    path('notifications/', views.NotificationList.as_view(), name='notification-list'),
+    path('notifications/<int:pk>/', views.NotificationDetail.as_view(), name='notification-detail'),
+    path('notifications/<int:pk>/mark-as-read/', views.MarkNotificationAsRead.as_view(), name='mark-notification-as-read'),
     # path('room/upload/file/<str:room_slug>/', UploadFileView.as_view(), name='upload_file'),
     # path('room/switch/branch/<str:room_slug>/<int:file_id>/<int:branch_id>/', SwitchBranchView.as_view(), name='switch_branch'),
 

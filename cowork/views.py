@@ -6,7 +6,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, reverse, redirect, get_object_or_404
 from django.utils.text import slugify
 from django.utils.decorators import method_decorator
-from django.http import HttpResponse, Http404, FileResponse, HttpResponseBadRequest, HttpResponseForbidden
+from django.http import HttpResponse, Http404, FileResponse, HttpResponseBadRequest, HttpResponseForbidden, JsonResponse
 from django.urls import reverse
 from django.contrib import messages
 from rest_framework import status, generics, permissions, status, viewsets
@@ -28,6 +28,7 @@ from serializers.serializers import (
     # BranchSerializer,
     UserNoteSerializer,
     FeatureRequestSerializer,
+    NotificationSerializer
     # UploadedFileSerializer,
     # Commit, UploadedFileVersion
 
@@ -36,7 +37,7 @@ from .models import (Task, Comment, Room, Message,
                     #  UploadedFile,
                      #  FileAccessLog,
                     #  Branch,
-                     UserNote, FeatureRequest
+                     UserNote, FeatureRequest, Notification
                      )
 
 
@@ -373,3 +374,28 @@ class SearchAPIView(APIView):
         
         except Exception as e:
             return Response({'error': f"An unexpected error occurred: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+
+
+
+class NotificationList(generics.ListAPIView):
+    queryset = Notification.objects.all()
+    serializer_class = NotificationSerializer
+
+class NotificationDetail(generics.RetrieveAPIView):
+    queryset = Notification.objects.all()
+    serializer_class = NotificationSerializer
+
+class MarkNotificationAsRead(generics.UpdateAPIView):
+    queryset = Notification.objects.all()
+    serializer_class = NotificationSerializer
+
+    def patch(self, request, *args, **kwargs):
+        try:
+            notification = self.get_object()
+            notification.is_read = True
+            notification.save()
+            return JsonResponse({'status': 'Notification marked as read.'}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return JsonResponse({'error': f"An unexpected error occurred: {str(e)}"}, status=500)

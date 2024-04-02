@@ -11,6 +11,7 @@ from cowork.models import (
     # UploadedFile,
     # Branch,
     UserNote, FeatureRequest,
+    Notification
     #   Commit, UploadedFileVersion
 )
 
@@ -244,3 +245,10 @@ class UpdateUserProfileSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         return super().validate(attrs)
+    
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notification
+        fields = ['id', 'room', 'sender', 'message', 'timestamp', 'is_read']

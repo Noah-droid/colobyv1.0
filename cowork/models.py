@@ -124,17 +124,30 @@ class FeatureRequest(models.Model):
 
 
 class Task(BaseModel):
+    PENDING = 'pending'
+    DONE = 'done'
+    UNDONE = 'undone'
+    # Define choices for the status field
+    STATUS_CHOICES = [
+        (PENDING, 'Pending'),
+        (DONE, 'Done'),
+        (UNDONE, 'Undone'),
+        # Add more status choices as needed
+    ]
+
     room = models.ForeignKey(Room, on_delete=models.RESTRICT)
-    # RESTRICT will delete the task if its parent is deleted
     title = models.CharField(max_length=100)
     description = models.TextField()
     completed = models.BooleanField(default=False)
     due_date = models.DateField()
     assigned_to = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='tasks_created')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=PENDING)
 
     def __str__(self):
         return self.title
+
 
 
 class Comment(BaseModel):
@@ -148,3 +161,12 @@ class Comment(BaseModel):
 
 
 
+class Notification(BaseModel):
+    room = models.ForeignKey(Room, on_delete=models.CASCADE)
+    sender = models.ForeignKey(User, on_delete=models.CASCADE)
+    message = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+    is_read = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"Activity: {self.message} carried out by {self.sender} in room: {self.room}"
