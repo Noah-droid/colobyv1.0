@@ -79,12 +79,12 @@ class Room(BaseModel):
         CustomUser, related_name="liked_rooms", blank=True)
     description = models.CharField(max_length=300, blank=True, null=True)
 
-    def save(self, *args, **kwargs):
-        if not self.unique_link or Room.objects.filter(unique_link=self.unique_link).exists():
-            self.unique_link = uuid.uuid4().hex[:50]
-            while Room.objects.filter(unique_link=self.unique_link).exists():
-                self.unique_link = uuid.uuid4().hex[:50]
-        super(Room, self).save(*args, **kwargs)
+    # def save(self, *args, **kwargs):
+    #     if not self.unique_link or Room.objects.filter(unique_link=self.unique_link).exists():
+    #         self.unique_link = uuid.uuid4().hex[:50]
+    #         while Room.objects.filter(unique_link=self.unique_link).exists():
+    #             self.unique_link = uuid.uuid4().hex[:50]
+    #     super(Room, self).save(*args, **kwargs)
 
     def __str__(self):
         return self.name
@@ -170,3 +170,5 @@ class Notification(BaseModel):
 
     def __str__(self):
         return f"Activity: {self.message} carried out by {self.sender} in room: {self.room}"
+
+

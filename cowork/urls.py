@@ -38,6 +38,8 @@ urlpatterns = [
     # Search 
     path('search/', views.SearchAPIView.as_view(), name='search'),
 
+    path('userdata', views.user_data, name='userdata'),
+
 
 
     path('notifications/', views.NotificationList.as_view(), name='notification-list'),

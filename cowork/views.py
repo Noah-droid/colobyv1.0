@@ -40,7 +40,9 @@ from .models import (Task, Comment, Room, Message,
                      UserNote, FeatureRequest, Notification
                      )
 
+import logging
 
+logger = logging.getLogger(__name__)
 
 
 class IsOwnerOrReadOnly(permissions.BasePermission):
@@ -78,6 +80,10 @@ class RoomCreateJoinView(APIView):
             return self.create_room(request)
         elif action == "join":
             return self.join_room(request)
+        elif action == "remove_user":
+            return self.remove_user_from_room(request)
+        elif action == "make_admin":
+            return self.make_user_admin(request)
         else:
             return Response({"detail": "Invalid action."}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -105,6 +111,8 @@ class RoomCreateJoinView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         except Exception as e:
+            log = logger.error(f"Error occurred during room creation: {str(e)}")
+            print(log)
             return Response({"detail": "An error occurred during room creation"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def join_room(self, request):
@@ -142,6 +150,40 @@ class RoomCreateJoinView(APIView):
             else:
                 return Response({"detail": "You are not the creator of this room, so you cannot delete it."},
                             status=status.HTTP_403_FORBIDDEN)
+        
+    def remove_user_from_room(self, request):
+        room_slug = request.data.get("room_slug")
+        username = request.data.get("username")
+        requester = request.user
+
+        try:
+            room = Room.objects.get(slug=room_slug)
+        except Room.DoesNotExist:
+            return Response({"detail": "Room does not exist!"}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = RoomSerializer(instance=room, data=request.data)
+        if serializer.is_valid():
+            result = serializer.remove_user(username, requester)
+            return Response(result, status=status.HTTP_200_OK)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def make_user_admin(self, request):
+        room_slug = request.data.get("room_slug")
+        username = request.data.get("username")
+        requester = request.user
+
+        try:
+            room = Room.objects.get(slug=room_slug)
+        except Room.DoesNotExist:
+            return Response({"detail": "Room does not exist!"}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = RoomSerializer(instance=room, data=request.data)
+        if serializer.is_valid():
+            result = serializer.make_admin(username, requester)
+            return Response(result, status=status.HTTP_200_OK)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class RoomDetailView(APIView):
@@ -399,3 +441,38 @@ class MarkNotificationAsRead(generics.UpdateAPIView):
             return JsonResponse({'status': 'Notification marked as read.'}, status=status.HTTP_200_OK)
         except Exception as e:
             return JsonResponse({'error': f"An unexpected error occurred: {str(e)}"}, status=500)
+        
+
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from .models import Room
+from serializers.serializers import RoomSerializer, TaskSerializer, UserSerializer
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def user_data(request):
+    user = request.user
+
+    # Retrieve rooms joined by the user
+    joined_rooms = user.room_set.all()
+    joined_rooms_serializer = RoomSerializer(joined_rooms, many=True)
+
+    # Retrieve rooms created by the user
+    created_rooms = user.created_rooms.all()
+    created_rooms_serializer = RoomSerializer(created_rooms, many=True)
+
+    # You can add more data retrieval here as needed
+
+    # Serialize user data
+    user_serializer = UserSerializer(user)
+
+    # Combine all data into a single dictionary
+    user_data = {
+        'user': user_serializer.data,
+        'joined_rooms': joined_rooms_serializer.data,
+        'created_rooms': created_rooms_serializer.data,
+        # Add more data as needed
+    }
+
+    return Response(user_data)

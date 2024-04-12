@@ -140,10 +140,30 @@ class CustomUserSerializer(serializers.ModelSerializer):
         model = CustomUser
         fields = ("username", "email", "password")
 
+class UserSerializer(serializers.ModelSerializer):
+    rooms = serializers.SerializerMethodField()
+    created_rooms = serializers.SerializerMethodField()
+    # Add more fields as needed
+
+    class Meta:
+        model = CustomUser
+        fields = ('id', 'username', 'email', 'rooms', 'created_rooms')
+
+    def get_rooms(self, user):
+        rooms = user.room_set.all()
+        return RoomSerializer(rooms, many=True).data
+
+    def get_created_rooms(self, user):
+        created_rooms = user.created_rooms.all()
+        return RoomSerializer(created_rooms, many=True).data
+
+
+
 
 class RoomSerializer(serializers.ModelSerializer):
     users = serializers.SerializerMethodField()
     created_by = serializers.SerializerMethodField()
+    total_users = serializers.SerializerMethodField()
 
     class Meta:
         model = Room
@@ -155,12 +175,32 @@ class RoomSerializer(serializers.ModelSerializer):
     def get_created_by(self, room):
         return room.created_by.username if room.created_by else None
 
-    def remove_user(self, room, user):
-        if user in room.users.all():
-            room.users.remove(user)
-            return {"detail": f"User {user.username} removed from the room."}
+    def get_total_users(self, room):
+        return room.users.count()
+
+    def remove_user(self, username, requester):
+        if requester == self.instance.created_by:
+            user_to_remove = self.instance.users.filter(username=username).first()
+            if user_to_remove:
+                self.instance.users.remove(user_to_remove)
+                return {"detail": f"User {username} removed from the room."}
+            else:
+                return {"detail": "User not found in the room."}
         else:
-            return {"detail": f"User {user.username} is not in the room."}
+            return {"detail": "Only the room creator can remove users."}
+
+    def make_admin(self, username, requester):
+        if requester == self.instance.created_by:
+            user_to_make_admin = self.instance.users.filter(username=username).first()
+            if user_to_make_admin:
+                user_to_make_admin.is_admin = True
+                user_to_make_admin.save()
+                return {"detail": f"User {username} is now an admin of the room."}
+            else:
+                return {"detail": "User not found in the room."}
+        else:
+            return {"detail": "Only the room creator can make users admins."}
+
 
 
 class UserNoteSerializer(serializers.Serializer):
