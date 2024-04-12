@@ -24,14 +24,18 @@ This collaborative web application is designed to streamline project management,
 - Voice-based commands for hands-free convenience.
 - Smart suggestions based on user behavior and historical data.
 
-### 4. Event Management
+### 4. Version Control System
+- Ability to keep track of files uploaded
+- A CLI tool to upload files to the server
+
+### 5. Event Management
 - Create and manage events, meetings, and deadlines.
 - Invite team members and external collaborators.
 - Sync events with calendar applications.
 - Automated reminders for upcoming events.
 - Seamless integration with task management.
 
-### 5. Forums
+### 6. Forums
 - Discussion forums for team members to share ideas, questions, and knowledge.
 - Categorize topics and threads for easy navigation.
 - Like, comment, and mark threads as resolved.
