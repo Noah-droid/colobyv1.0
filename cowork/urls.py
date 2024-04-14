@@ -40,6 +40,8 @@ urlpatterns = [
 
     path('userdata', views.user_data, name='userdata'),
 
+     path('send-email/', views.send_email_view, name='send_email'),
+
 
 
     path('notifications/', views.NotificationList.as_view(), name='notification-list'),
