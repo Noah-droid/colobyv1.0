@@ -28,7 +28,8 @@ from serializers.serializers import (
     # BranchSerializer,
     UserNoteSerializer,
     FeatureRequestSerializer,
-    NotificationSerializer
+    NotificationSerializer,
+    UserSerializer
     # UploadedFileSerializer,
     # Commit, UploadedFileVersion
 
@@ -39,7 +40,6 @@ from .models import (Task, Comment, Room, Message,
                     #  Branch,
                      UserNote, FeatureRequest, Notification
                      )
-
 import logging
 
 logger = logging.getLogger(__name__)
@@ -419,8 +419,6 @@ class SearchAPIView(APIView):
 
 
 
-
-
 class NotificationList(generics.ListAPIView):
     queryset = Notification.objects.all()
     serializer_class = NotificationSerializer
@@ -443,12 +441,6 @@ class MarkNotificationAsRead(generics.UpdateAPIView):
             return JsonResponse({'error': f"An unexpected error occurred: {str(e)}"}, status=500)
         
 
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-from .models import Room
-from serializers.serializers import RoomSerializer, TaskSerializer, UserSerializer
-
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def user_data(request):
@@ -462,7 +454,9 @@ def user_data(request):
     created_rooms = user.created_rooms.all()
     created_rooms_serializer = RoomSerializer(created_rooms, many=True)
 
-    # You can add more data retrieval here as needed
+    # Retrieve tasks assigned to the user along with the room
+    assigned_tasks = Task.objects.filter(assigned_to=user)
+    assigned_tasks_data = TaskSerializer(assigned_tasks, many=True)
 
     # Serialize user data
     user_serializer = UserSerializer(user)
@@ -472,7 +466,24 @@ def user_data(request):
         'user': user_serializer.data,
         'joined_rooms': joined_rooms_serializer.data,
         'created_rooms': created_rooms_serializer.data,
+        'assigned_tasks': assigned_tasks_data.data,
         # Add more data as needed
     }
 
     return Response(user_data)
+
+
+from django.shortcuts import render
+from django.core.mail import send_mail
+from django.http import HttpResponse
+
+def send_email_view(request):
+    # Send an email
+    send_mail(
+        "Subject here",  # Subject
+        "Here is the message.",  # Message
+        "noahtochukwu10@gmail.com",  # From email address
+        ["noah@pario.ng"],  # To email addresses
+        fail_silently=False,  # Set it to True to suppress exceptions if email sending fails
+    )
+    return HttpResponse("Email sent successfully!")
