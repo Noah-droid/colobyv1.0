@@ -40,13 +40,25 @@ urlpatterns = [
 
     path('userdata', views.user_data, name='userdata'),
 
-     path('send-email/', views.send_email_view, name='send_email'),
+    #  path('send-email/', views.send_email_view, name='send_email'),
 
 
 
     path('notifications/', views.NotificationList.as_view(), name='notification-list'),
     path('notifications/<int:pk>/', views.NotificationDetail.as_view(), name='notification-detail'),
     path('notifications/<int:pk>/mark-as-read/', views.MarkNotificationAsRead.as_view(), name='mark-notification-as-read'),
+
+    path('room/<str:room_slug>/upload/', views.UploadFileView.as_view(), name='upload_file'),
+    path('room/<str:room_slug>/staged/', views.StagedFilesView.as_view(), name='stage_file'),
+    path('room/<str:room_slug>/stage/<int:staged_file_id>/decision/', views.StageFileDecisionView.as_view(), name='stage_file_decision'),
+    path('room/<str:room_slug>/room-files/', views.RoomFilesView.as_view(), name='room_files'),
+
+    # path('room/<str:room_slug>/upload/', views.UploadFileView.as_view(), name='upload_file'),
+    # path('room/<str:room_slug>/staged-files/', views.ListStagedFilesView.as_view(), name='list_staged_files'),
+    # path('room/<str:room_slug>/stage/', views.StageFileView.as_view(), name='stage_file'),
+    # path('room/<str:room_slug>/stage/<int:staged_file_id>/decision/', views.StageFileDecisionView.as_view(), name='stage_file_decision'),
+    # path('room/<str:room_slug>/branches/<int:branch_id>/merge/', views.MergeStagedFilesView.as_view(), name='merge_staged_files'),
+    # path('room/<str:room_slug>/branches/create/', views.CreateBranchView.as_view(), name='create_branch'),
     # path('room/upload/file/<str:room_slug>/', UploadFileView.as_view(), name='upload_file'),
     # path('room/switch/branch/<str:room_slug>/<int:file_id>/<int:branch_id>/', SwitchBranchView.as_view(), name='switch_branch'),
 

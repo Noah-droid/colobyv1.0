@@ -29,15 +29,17 @@ from serializers.serializers import (
     UserNoteSerializer,
     FeatureRequestSerializer,
     NotificationSerializer,
-    UserSerializer
-    # UploadedFileSerializer,
+    UserSerializer,
+    FileSerializer,
+    StagedFileSerializer
     # Commit, UploadedFileVersion
 
 )
+
+import hashlib
 from .models import (Task, Comment, Room, Message,
-                    #  UploadedFile,
-                     #  FileAccessLog,
-                    #  Branch,
+                    File, StagedFile, 
+                    Branch,
                      UserNote, FeatureRequest, Notification
                      )
 import logging
@@ -285,7 +287,7 @@ class TaskListCreateView(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         room = get_object_or_404(Room, slug=self.kwargs['room_slug'])
-        serializer.save(room=room)
+        serializer.save(room=room, created_by=self.request.user)
 
     def get_serializer_context(self):
         # Pass the room to the serializer context
@@ -473,17 +475,176 @@ def user_data(request):
     return Response(user_data)
 
 
-from django.shortcuts import render
-from django.core.mail import send_mail
-from django.http import HttpResponse
+class UploadFileView(APIView):
+    def post(self, request, room_slug):
+        try:
+            room = Room.objects.get(slug=room_slug)
+        except Room.DoesNotExist:
+            return Response("Room not found", status=status.HTTP_404_NOT_FOUND)
 
-def send_email_view(request):
-    # Send an email
-    send_mail(
-        "Subject here",  # Subject
-        "Here is the message.",  # Message
-        "noahtochukwu10@gmail.com",  # From email address
-        ["noah@pario.ng"],  # To email addresses
-        fail_silently=False,  # Set it to True to suppress exceptions if email sending fails
-    )
-    return HttpResponse("Email sent successfully!")
+        uploaded_by = request.user
+        request.data['room'] = room.id
+        request.data['uploaded_by'] = uploaded_by.id
+
+        serializer = FileSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(room=room, uploaded_by=uploaded_by, is_staged=True)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class StageFileDecisionView(APIView):
+    def post(self, request, room_slug, staged_file_id):
+        staged_file = File.objects.get(id=staged_file_id)
+        if request.user != staged_file.uploaded_by:
+            return Response("Only the uploader can make decisions on staged files", status=status.HTTP_403_FORBIDDEN)
+
+        decision = request.data.get('decision')
+        if decision == 'add':
+            staged_file.is_staged = False
+            staged_file.save()
+            return Response("File added to room", status=status.HTTP_200_OK)
+        elif decision == 'remove':
+            staged_file.delete()
+            return Response("File removed from staging area", status=status.HTTP_200_OK)
+        else:
+            return Response("Invalid decision", status=status.HTTP_400_BAD_REQUEST)
+
+
+class StagedFilesView(APIView):
+    def get(self, request, room_slug):
+        try:
+            staged_files = File.objects.filter(room__slug=room_slug, is_staged=True)
+            serializer = FileSerializer(staged_files, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response(str(e), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class RoomFilesView(APIView):
+    def get(self, request, room_slug):
+        try:
+            room_files = File.objects.filter(room__slug=room_slug, is_staged=False)
+            serializer = FileSerializer(room_files, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response(str(e), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+# class UploadFileView(APIView):
+#     def post(self, request, room_slug):
+#         try:
+#             room = Room.objects.get(slug=room_slug)
+#         except Room.DoesNotExist:
+#             return Response("Room not found", status=status.HTTP_404_NOT_FOUND)
+
+#         room = Room.objects.get(slug=room_slug)
+#         request.data['room'] = room.id
+
+#         request.data['uploaded_by'] = request.user.id
+
+
+#         uploaded_by = request.user
+#         serializer = FileSerializer(data=request.data)
+#         if serializer.is_valid():
+#             uploaded_file = serializer.validated_data['path']
+#             uploaded_file_hash = self.calculate_file_hash(uploaded_file)
+#             existing_file = File.objects.filter(room=room, name=uploaded_file.name).first()
+#             if existing_file:
+#                 existing_file_hash = self.calculate_file_hash(existing_file.path)
+#                 if uploaded_file_hash != existing_file_hash:
+#                     serializer.save(room=room, uploaded_by=uploaded_by)
+#                     return Response(serializer.data, status=status.HTTP_201_CREATED)
+#                 else:
+#                     return Response("File content has not changed.", status=status.HTTP_200_OK)
+#             else:
+#                 serializer.save(room=room, uploaded_by=uploaded_by)
+#                 return Response(serializer.data, status=status.HTTP_201_CREATED)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+#     def calculate_file_hash(self, file):
+#         hasher = hashlib.md5()
+#         for chunk in file.chunks():
+#             hasher.update(chunk)
+#         return hasher.hexdigest()
+
+# class StageFileView(APIView):
+#     def post(self, request, room_slug):
+#         room = Room.objects.get(slug=room_slug)
+#         uploaded_by = request.user
+#         request.data['room'] = room.id
+
+#         request.data['uploaded_by'] = request.user.id
+#         serializer = FileSerializer(data=request.data)
+#         if serializer.is_valid():
+#             uploaded_file = serializer.validated_data['path']
+#             serializer.save(room=room, uploaded_by=uploaded_by)
+#             return Response(serializer.data, status=status.HTTP_201_CREATED)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# class StageFileDecisionView(APIView):
+#     def post(self, request, room_slug, staged_file_id):
+#         staged_file = StagedFile.objects.get(id=staged_file_id)
+#         if request.user != staged_file.room.created_by:
+#             return Response("Only room admin can make decisions on staged files", status=status.HTTP_403_FORBIDDEN)
+        
+#         decision = request.data.get('decision', None)
+#         if decision == 'add':
+#             staged_file.is_added = True
+#             staged_file.save()
+#             return Response("File added to room", status=status.HTTP_200_OK)
+#         elif decision == 'remove':
+#             staged_file.delete()
+#             return Response("File removed from staging area", status=status.HTTP_200_OK)
+#         else:
+#             return Response("Invalid decision", status=status.HTTP_400_BAD_REQUEST)
+
+
+# class ListStagedFilesView(APIView):
+#     def get(self, request, room_slug):
+#         room = Room.objects.get(slug=room_slug)
+#         staged_files = StagedFile.objects.filter(room=room)
+#         serializer = StagedFileSerializer(staged_files, many=True)
+#         return Response(serializer.data)
+
+
+
+# class MergeStagedFilesView(APIView):
+#     def post(self, request, room_slug, branch_id):
+#         room = Room.objects.get(slug=room_slug)
+#         branch = Branch.objects.get(id=branch_id)
+#         if request.user != room.created_by:
+#             return Response("Only room admin can merge staged files", status=status.HTTP_403_FORBIDDEN)
+        
+#         staged_files = StagedFile.objects.filter(room=room)
+#         for staged_file in staged_files:
+#             if staged_file.is_added:
+#                 File.objects.create(room=room, name=staged_file.file.name, path=staged_file.file.path, uploaded_by=staged_file.file.uploaded_by)
+#                 staged_file.delete()
+#         return Response("Staged files merged into branch", status=status.HTTP_200_OK)
+
+# class CreateBranchView(APIView):
+#     def post(self, request, room_slug):
+#         room = Room.objects.get(slug=room_slug)
+#         if request.user != room.created_by:
+#             return Response("Only room admin can create branches", status=status.HTTP_403_FORBIDDEN)
+        
+#         name = request.data.get('name')
+#         if not name:
+#             return Response("Branch name is required", status=status.HTTP_400_BAD_REQUEST)
+
+#         branch = Branch.objects.create(room=room, name=name)
+#         return Response("Branch created successfully", status=status.HTTP_201_CREATED)
+
+
+# from django.shortcuts import render
+# from django.core.mail import send_mail
+# from django.http import HttpResponse
+
+# def send_email_view(request):
+#     # Send an email
+#     send_mail(
+#         "Subject here",  # Subject
+#         "Here is the message.",  # Message
+#         "noahtochukwu10@gmail.com",  # From email address
+#         ["noah@pario.ng"],  # To email addresses
+#         fail_silently=False,  # Set it to True to suppress exceptions if email sending fails
+#     )
+#     return HttpResponse("Email sent successfully!")

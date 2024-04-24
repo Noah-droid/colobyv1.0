@@ -8,10 +8,11 @@ from django.contrib.auth.hashers import check_password
 from cowork.models import (
     Room, Task, Comment,
     Message,
-    # UploadedFile,
+    File,
     # Branch,
     UserNote, FeatureRequest,
-    Notification
+    Notification,
+    StagedFile
     #   Commit, UploadedFileVersion
 )
 
@@ -203,6 +204,20 @@ class RoomSerializer(serializers.ModelSerializer):
 
 
 
+
+
+class FileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = File
+        fields = ['id', 'room', 'name', 'path', 'uploaded_by', 'is_staged', 'uploaded_at']
+
+
+
+class StagedFileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StagedFile
+        fields = ['id', 'room', 'uploaded_by', 'file', 'is_staged', 'is_added_to_room']
+
 class UserNoteSerializer(serializers.Serializer):
     class Meta:
         model = UserNote
@@ -251,7 +266,7 @@ class TaskSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Task
-        fields = '__all__'
+        exclude = ['created_by']  # Exclude created_by field from user input
         read_only_fields = ['room']
 
     def validate_assigned_to(self, value):
@@ -265,6 +280,7 @@ class TaskSerializer(serializers.ModelSerializer):
                 "The assigned user must be a member of the room or the room creator.")
 
         return value
+
 
 
 class CommentSerializer(serializers.ModelSerializer):
