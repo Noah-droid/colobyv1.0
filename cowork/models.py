@@ -89,6 +89,33 @@ class Room(BaseModel):
     def __str__(self):
         return self.name
 
+class File(models.Model):
+    room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name='files')
+    name = models.CharField(max_length=255)
+    path = models.FileField(upload_to='room_files')
+    uploaded_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    is_staged = models.BooleanField(default=False)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+
+
+class Branch(models.Model):
+    room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name='branches')
+    name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.name
+
+
+class StagedFile(models.Model):
+    room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name='staged_files')
+    file = models.ForeignKey(File, on_delete=models.CASCADE, related_name='staged_in')
+    is_added = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.file.name} in {self.room.name} staging area"
 
 class Message(BaseModel):
     room = models.ForeignKey(Room, on_delete=models.CASCADE)
