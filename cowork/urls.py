@@ -41,7 +41,8 @@ urlpatterns = [
     path('userdata', views.user_data, name='userdata'),
 
     #  path('send-email/', views.send_email_view, name='send_email'),
-
+    path('protected/', views.ProtectedAPIView.as_view(), name='protected'),
+    path('generate-api-key/', views.GenerateAPIKeyView.as_view(), name='generate_api_key'),
 
 
     path('notifications/', views.NotificationList.as_view(), name='notification-list'),
