@@ -21,7 +21,7 @@ urlpatterns = [
     path('room/<str:room_slug>/tasks/', views.TaskListCreateView.as_view(), name='task-list'),
     path('room/<str:room_slug>/tasks/<int:pk>/', views.TaskRetrieveUpdateDestroyView.as_view(), name='task-detail'),
     path('room/<str:room_slug>/tasks/<int:pk>/comments/', views.CommentCreateView.as_view(), name='comment-create'),
-    path('room/comments/<int:pk>/', views.CommentRetrieveUpdateDestroyView.as_view(), name='comment-detail'),
+    path('room/<str:room_slug>/comments/<int:pk>/', views.CommentRetrieveUpdateDestroyView.as_view(), name='comment-detail'),
     path('room/like/<str:room_slug>/', views.like_room, name='like-room'),
     # path('room/count/', views.UserRoomsView.as_view(), name='user_rooms'),
 
