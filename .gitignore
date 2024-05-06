@@ -32,3 +32,5 @@ static/
 
 
 staticfiles/
+
+local_requirements.txt
