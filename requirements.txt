@@ -7,7 +7,7 @@ autobahn==23.1.1
 Automat==22.10.0
 backports.zoneinfo==0.2.1
 certifi==2023.7.22
-cffi==1.15.1
+cffi==1.16.0
 channels==4.0.0
 charset-normalizer==3.2.0
 colorama==0.4.6
@@ -18,9 +18,9 @@ cryptography==39.0.0
 daphne==4.0.0
 defusedxml==0.7.1
 dj-database-url==2.1.0
-dj-rest-auth==5.0.1
-Django==3.2
-django-allauth==0.55.2
+dj-rest-auth==4.0.1
+Django==4.2
+django-allauth==0.50.0
 django-debug-toolbar
 django-rest-swagger==2.2.0
 django-tinymce==3.6.1
@@ -50,7 +50,6 @@ pycparser==2.21
 PyJWT==1.7.1
 pyOpenSSL==23.0.0
 python-decouple==3.8
-python-dotenv==0.21
 python3-openid==3.2.0
 pytz==2023.3
 PyYAML==6.0.1
@@ -71,4 +70,3 @@ urllib3==2.0.4
 watchdog==3.0.0
 yarl==1.9.2
 zope.interface==5.5.2
-
