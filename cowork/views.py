@@ -47,6 +47,36 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+from .models import APIKey
+from .authentication import APIKeyAuthentication
+
+class ProtectedAPIView(APIView):
+    authentication_classes = [APIKeyAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        return Response({"message": "Protected API endpoint"}, status=status.HTTP_200_OK)
+
+class GenerateAPIKeyView(APIView):
+    def post(self, request):
+        # Get the user making the request
+        user = request.user
+
+        # Create a new API key for the user
+        api_key = APIKey.create_for_user(user)
+
+        return Response({"api_key": api_key.key}, status=status.HTTP_201_CREATED)
+
+
+
+
+
+
+
+
+
+
+
 class IsOwnerOrReadOnly(permissions.BasePermission):
     """
     Custom permission to only allow the owner of an object to edit it.
@@ -648,3 +678,5 @@ class RoomFilesView(APIView):
 #         fail_silently=False,  # Set it to True to suppress exceptions if email sending fails
 #     )
 #     return HttpResponse("Email sent successfully!")
+
+

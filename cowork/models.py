@@ -17,6 +17,23 @@ from tinymce.models import HTMLField
 User = get_user_model()
 
 
+import secrets
+
+class APIKey(models.Model):
+    key = models.CharField(max_length=270, unique=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    @classmethod
+    def generate_key(cls):
+        return secrets.token_urlsafe(32)
+
+    @classmethod
+    def create_for_user(cls, user):
+        key = cls(key=cls.generate_key(), user=user)
+        key.save()
+        return key
+
 class SoftDeletionManager(models.Manager):
     """
     A custom manager for models that support soft deletion. This manager filters out

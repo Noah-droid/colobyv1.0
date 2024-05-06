@@ -3,9 +3,7 @@ import os
 import dj_database_url
 from pathlib import Path
 from datetime import timedelta
-from dotenv import load_dotenv
 from decouple import config
-load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -219,8 +217,8 @@ ACCOUNT_LOGOUT_ON_GET = True
 SOCIALACCOUNT_PROVIDERS = {
     "google": {
         "APP": {
-            "client_id": os.getenv('CLIENT_ID'),  
-            "secret": os.getenv('CLIENT_SECRET'),                                     
+            "client_id": config('CLIENT_ID'),  
+            "secret": config('CLIENT_SECRET'),                                     
         },
         "SCOPE": [
             "profile",

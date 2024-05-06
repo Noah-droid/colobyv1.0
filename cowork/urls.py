@@ -19,9 +19,9 @@ urlpatterns = [
     # path('public-room/<slug:slug>/', views.public_chat, name='public-room'),
     # path('post_message/', views.post_message, name='post-message'),
     path('room/<str:room_slug>/tasks/', views.TaskListCreateView.as_view(), name='task-list'),
-    path('room/tasks/<int:pk>/', views.TaskRetrieveUpdateDestroyView.as_view(), name='task-detail'),
-    path('room/tasks/<int:pk>/comments/', views.CommentCreateView.as_view(), name='comment-create'),
-    path('room/comments/<int:pk>/', views.CommentRetrieveUpdateDestroyView.as_view(), name='comment-detail'),
+    path('room/<str:room_slug>/tasks/<int:pk>/', views.TaskRetrieveUpdateDestroyView.as_view(), name='task-detail'),
+    path('room/<str:room_slug>/tasks/<int:pk>/comments/', views.CommentCreateView.as_view(), name='comment-create'),
+    path('room/<str:room_slug>/comments/<int:pk>/', views.CommentRetrieveUpdateDestroyView.as_view(), name='comment-detail'),
     path('room/like/<str:room_slug>/', views.like_room, name='like-room'),
     # path('room/count/', views.UserRoomsView.as_view(), name='user_rooms'),
 
@@ -41,7 +41,8 @@ urlpatterns = [
     path('userdata', views.user_data, name='userdata'),
 
     #  path('send-email/', views.send_email_view, name='send_email'),
-
+    path('protected/', views.ProtectedAPIView.as_view(), name='protected'),
+    path('generate-api-key/', views.GenerateAPIKeyView.as_view(), name='generate_api_key'),
 
 
     path('notifications/', views.NotificationList.as_view(), name='notification-list'),
