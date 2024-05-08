@@ -79,25 +79,6 @@ class GoogleLogin(SocialLoginView):
         
         return response
    
-    
-
-class LogoutView(APIView):
-    """
-        This endpoint is for logging out a user 
-    """
-    def post(self, request):
-
-        # NOTE: This only logs out a user that logs in using OAUTH for now
-        user_token = request.data["token"]
-        token = Token.objects.filter(key=user_token).first()
-        if token:
-            token.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        else:
-            return Response({
-                "error":"invalid token"
-            }, status=status.HTTP_400_BAD_REQUEST)
-    
 
 
 class UpdateUserProfileView(generics.RetrieveUpdateAPIView):
