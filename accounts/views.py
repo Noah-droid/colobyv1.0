@@ -1,8 +1,6 @@
 from rest_framework import status, generics, permissions
 from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
 from serializers.serializers import (
     UserRegistrationSerializer, 
     SignInSerializer, 
@@ -17,14 +15,14 @@ from rest_framework.views import APIView
 from django.contrib.auth import get_user_model
 
 from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
     TokenRefreshView,
 )
 
 from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
     TokenRefreshView,
 )
+from rest_framework.authtoken.models import Token
+from rest_framework_simplejwt.tokens import RefreshToken
 
 User = get_user_model()
 
@@ -65,30 +63,31 @@ class GoogleLogin(SocialLoginView):
     client_class = OAuth2Client
 
 
-class LogoutView(APIView):
-    """
-        This endpoint is for logging out a user 
-    """
-    def post(self, request):
-
-        # NOTE: This only logs out a user that logs in using OAUTH for now
-        user_token = request.data["token"]
-        token = Token.objects.filter(key=user_token).first()
-        if token:
-            token.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        else:
-            return Response({
-                "error":"invalid token"
-            }, status=status.HTTP_400_BAD_REQUEST)
-    
+    def dispatch(self, request, *args, **kwargs):
+        """
+           Overriding the dispatch method to customize the response:
+            - Remove the temporary 'key' generated during authentication.
+            - Create an access token for the authenticated user and add it to the response.
+            This approach is used as we are not using Token-based authentication.
+        """
+        response = super().dispatch(request, *args, **kwargs) # Access the response returned by complete_login method
+        key = response.data['key']
+        user_id_associated_with_token = Token.objects.filter(key=key).first().user.id
+        user = User.objects.filter(id=user_id_associated_with_token).first()
+        response.data.pop('key')
+        response.data['access_token'] = str(RefreshToken.for_user(user).access_token)
+        
+        return response
+   
 
 
 class UpdateUserProfileView(generics.RetrieveUpdateAPIView):
-    queryset = User.objects.all()
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = UpdateUserProfileSerializer
-    lookup_field = 'id'
+    http_method_names = ["get", "put"]
+    
+    def get_object(self):
+        return self.request.user
 
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)

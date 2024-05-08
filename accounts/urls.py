@@ -17,7 +17,7 @@ urlpatterns = [
     path("register/", UserRegistrationView.as_view(), name="register"),
     
     path("log-in/", SignInAPIView.as_view(), name="log_in"),
-    path("update-profile/<uuid:id>/", UpdateUserProfileView.as_view(), name="update_profile"),
+    path("update-profile/", UpdateUserProfileView.as_view(), name="update_profile"),
     path("change-password/", ChangePasswordView.as_view(), name="change_password"),
     path(
         "logout/",
