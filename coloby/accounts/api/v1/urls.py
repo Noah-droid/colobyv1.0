@@ -1,6 +1,6 @@
 from django.urls import path
 from coloby.accounts.api.v1.views import (
-    UserRegistrationView,
+    RegisterView,
     GoogleLogin, 
     SignInAPIView, 
     ChangePasswordView,
@@ -11,7 +11,7 @@ from coloby.accounts.api.v1.views import (
 
 
 urlpatterns = [
-    path("register/", UserRegistrationView.as_view(), name="register"),
+    path("register/", RegisterView.as_view(), name="register"),
     
     path("log-in/", SignInAPIView.as_view(), name="log_in"),
     path("update-profile/", UpdateUserProfileView.as_view(), name="update_profile"),

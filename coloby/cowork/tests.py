@@ -4,7 +4,7 @@ from rest_framework import status
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import get_user_model
 from .models import Room, UploadedFile, Message, Task
-from serializers.serializers import TaskSerializer 
+from coloby.cowork.api.v1.serializers import TaskSerializer 
 from django.urls import reverse
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import override_settings
@@ -271,9 +271,9 @@ User = get_user_model()
 
 from django.test import TestCase
 from rest_framework.test import APIClient
-from cowork.models import Room
-from cowork.models import UploadedFile, Branch, Commit, UploadedFileVersion
-from serializers.serializers import UploadedFileSerializer
+from coloby.cowork.models import Room
+from coloby.cowork.models import UploadedFile, Branch, Commit, UploadedFileVersion
+from coloby.cowork.api.v1.serializers import UploadedFileSerializer
 
 @override_settings(MEDIA_ROOT=tempfile.mkdtemp(prefix="media"))
 class UploadFileViewTests(TestCase):

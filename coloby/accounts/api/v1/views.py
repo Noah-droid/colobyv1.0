@@ -27,7 +27,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 User = get_user_model()
 
-class UserRegistrationView(generics.CreateAPIView):
+class RegisterView(generics.CreateAPIView):
     serializer_class = UserRegistrationSerializer
     permission_classes = [permissions.AllowAny]
     def post(self, request, *args, **kwargs):
