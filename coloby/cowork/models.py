@@ -9,7 +9,7 @@ import uuid
 from django.contrib.auth.models import User
 # import shortuuid
 from django.contrib.auth import get_user_model
-from accounts.models import CustomUser
+from coloby.accounts.models import CustomUser
 import datetime
 from tinymce.models import HTMLField
 

@@ -2,7 +2,7 @@ import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from django.shortcuts import get_object_or_404
 from asgiref.sync import sync_to_async
-from cowork.models import Room, Message, Task
+from coloby.cowork.models import Room, Message, Task
 from django.utils import timezone
 
 class ChatConsumer(AsyncWebsocketConsumer):

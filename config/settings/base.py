@@ -5,7 +5,7 @@ from pathlib import Path
 from datetime import timedelta
 from decouple import config
 
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 SECRET_KEY = config('SECRET_KEY')
 
@@ -24,35 +24,6 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.humanize",
     "django.contrib.staticfiles",
-
-    "channels",
-  
-
-    "accounts",
-    "cowork",
-    # "clob",
-    # "commands",
-    "rest_framework",
-    "rest_framework.authtoken",
-    'corsheaders',
-    # Documentation with Swagger
-    'rest_framework_swagger',
-    'drf_yasg',
-    "allauth",
-    "allauth.account",
-    "allauth.socialaccount",
-    "allauth.socialaccount.providers.google",
-    "tinymce",
- 
-    "dj_rest_auth",
-    "dj_rest_auth.registration",
-
-    #Notifications
-    # 'notifications',
-    # 'notifications_rest',
-    
-    # "debug_toolbar"
-
 ]
 
 
@@ -72,7 +43,8 @@ MIDDLEWARE = [
     # "allauth.account.middleware.AccountMiddleware",
 ]
 
-ROOT_URLCONF = "coloby.urls"
+ROOT_URLCONF = "config.urls"
+
 
 TEMPLATES = [
     {
@@ -92,8 +64,11 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "coloby.wsgi.application"
-ASGI_APPLICATION = "coloby.asgi.application"
+WSGI_APPLICATION = "config.wsgi.application"
+ASGI_APPLICATION = "config.asgi.application"
+
+
+
 
 DATABASES = {
     "default": {
@@ -101,12 +76,6 @@ DATABASES = {
         "NAME": BASE_DIR / "db.sqlite3",
     }
 }
-
-
-
-database_url = config("DATABASE_URL")
-DATABASES["default"] = dj_database_url.parse(database_url)
-
 
 
 # AUTH_PASSWORD_VALIDATORS = [
@@ -134,6 +103,7 @@ USE_TZ = True
 
 
 STATIC_URL = '/static/'
+
 if DEBUG:
   STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 else:
@@ -146,11 +116,7 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-CHANNEL_LAYERS = {
-    'default': {
-        "BACKEND": "channels.layers.InMemoryChannelLayer",
-    }
-}
+
 
 
 AUTHENTICATION_BACKENDS = [
@@ -160,29 +126,6 @@ AUTHENTICATION_BACKENDS = [
     # `allauth` specific authentication methods, such as login by email
     'allauth.account.auth_backends.AuthenticationBackend',    
 ]
-
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-        'rest_framework.authentication.TokenAuthentication',
-    ],
-}
-
-
-# SIMPLEJWT SETTINGS
-
-SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(days=50),
-    "SLIDING_TOKEN_REFRESH_LIFETIME": timedelta(days=1),
-    "SLIDING_TOKEN_LIFETIME": timedelta(days=60),
-    "SLIDING_TOKEN_REFRESH_LIFETIME_GRACE_PERIOD": timedelta(days=1),
-    "SLIDING_TOKEN_REFRESH_LIFETIME_ALLOWANCE": timedelta(days=1),
-    "SLIDING_TOKEN_REFRESH_AFTER_LIFETIME": timedelta(days=1),
-    "SLIDING_TOKEN_LIFETIME_GRACE_PERIOD": timedelta(days=1),
-    "SLIDING_TOKEN_SAVE_BODY": True,
-
-    "AUTH_HEADER_TYPES": ("Bearer", "Token"),
-}
 
 TINYMCE_DEFAULT_CONFIG = {
     'height': 360,
@@ -200,63 +143,11 @@ TINYMCE_DEFAULT_CONFIG = {
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-AUTH_USER_MODEL = "accounts.CustomUser"
 
 
-
-
-ACCOUNT_EMAIL_VERIFICATION = 'none'
-ACCOUNT_AUTHENTICATION_METHOD = 'email'
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_UNIQUE_EMAIL = True
-ACCOUNT_EMAIL_VERIFICATION = 'none'
-ACCOUNT_LOGOUT_ON_GET = True
-
-
-# SOCIAL_LOGIN_SETTINGS
-SOCIALACCOUNT_PROVIDERS = {
-    "google": {
-        "APP": {
-            "client_id": config('CLIENT_ID'),  
-            "secret": config('CLIENT_SECRET'),                                     
-        },
-        "SCOPE": [
-            "profile",
-            "email",
-        ],
-        "AUTH_PARAMS": {
-            "access_type": "online",
-        },
-        "VERIFIED_EMAIL": True,
-    },
-}
-
-
-
-
-CORS_ORIGIN_ALLOW_ALL = config('CORS_ORIGIN_ALLOW_ALL', default=False, cast=bool)
-CORS_ALLOWED_ORIGINS = [origin.strip() for origin in config('CORS_ALLOWED_ORIGINS').split(',')]
-CORS_ALLOW_METHODS = [method.strip() for method in config('CORS_ALLOW_METHODS').split(',')]
-CORS_ALLOW_HEADERS = [header.strip() for header in config('CORS_ALLOW_HEADERS').split(',')]
-
-# DEBUG_TOOLBAR_SETTINGS
-
-# INTERNAL_IPS = [
-#     "127.0.0.1",
-#     "localhost",
-#     "coloby.onrender.com"
-# ]
 
 CSRF_COOKIE_SECURE = True
 
 APPEND_SLASH = False
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-# DEFAULT_FROM_EMAIL = 'admin@coloby.com'
-EMAIL_SUBJECT_PREFIX = '[Coloby]'
-EMAIL_PORT = 587
-EMAIL_HOST_USER = config('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
-EMAIL_USE_TLS = True
-EMAIL_USE_SSL = False
+AUTH_USER_MODEL = "accounts.CustomUser"
