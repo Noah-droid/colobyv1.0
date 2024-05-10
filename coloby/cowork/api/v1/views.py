@@ -322,8 +322,10 @@ class TaskListCreateView(generics.ListCreateAPIView):
         serializer.save(room=room, created_by=self.request.user)
 
     def get_queryset(self):
+        room = get_object_or_404(Room, slug=self.kwargs['room_slug']) 
         user_created_tasks = Task.objects.filter(
-            created_by=self.request.user
+            created_by = self.request.user,
+            room = room
         )
         return user_created_tasks
 
