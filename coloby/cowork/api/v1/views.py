@@ -21,7 +21,7 @@ from rest_framework.views import APIView
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.core.exceptions import ValidationError
-from serializers.serializers import (
+from coloby.cowork.api.v1.serializers import (
     TaskSerializer, CommentSerializer,
     SendMessageSerializer, ReceiveMessageSerializer,
     RoomSerializer,
@@ -29,15 +29,17 @@ from serializers.serializers import (
     UserNoteSerializer,
     FeatureRequestSerializer,
     NotificationSerializer,
-    UserSerializer,
     FileSerializer,
     StagedFileSerializer
     # Commit, UploadedFileVersion
 
 )
+from coloby.accounts.api.v1.serializers import (
+    UserSerializer,
+)
 
 import hashlib
-from .models import (Task, Comment, Room, Message,
+from ...models import (Task, Comment, Room, Message,
                     File, StagedFile, 
                     Branch,
                      UserNote, FeatureRequest, Notification
@@ -47,8 +49,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-from .models import APIKey
-from .authentication import APIKeyAuthentication
+from ...models import APIKey
+from ...authentication import APIKeyAuthentication
 
 class ProtectedAPIView(APIView):
     authentication_classes = [APIKeyAuthentication]
@@ -168,20 +170,20 @@ class RoomCreateJoinView(APIView):
         else:
             # The provided slug does not match the actual slug
             return Response({"detail": "Invalid passcode for the room!"}, status=status.HTTP_400_BAD_REQUEST)
-        
-        def delete_room(self, request):
-            room_slug = request.data.get("room_slug")
-            try:
-                room = Room.objects.get(slug=room_slug)
-            except Room.DoesNotExist:
-                return Response({"detail": "Room does not exist!"}, status=status.HTTP_404_NOT_FOUND)
+    
+    def delete_room(self, request):
+        room_slug = request.data.get("room_slug")
+        try:
+            room = Room.objects.get(slug=room_slug)
+        except Room.DoesNotExist:
+            return Response({"detail": "Room does not exist!"}, status=status.HTTP_404_NOT_FOUND)
 
-            if room.created_by == request.user:
-                room.delete()
-                return Response({"detail": "Room deleted successfully."}, status=status.HTTP_200_OK)
-            else:
-                return Response({"detail": "You are not the creator of this room, so you cannot delete it."},
-                            status=status.HTTP_403_FORBIDDEN)
+        if room.created_by == request.user:
+            room.delete()
+            return Response({"detail": "Room deleted successfully."}, status=status.HTTP_200_OK)
+        else:
+            return Response({"detail": "You are not the creator of this room, so you cannot delete it."},
+                        status=status.HTTP_403_FORBIDDEN)
         
     def remove_user_from_room(self, request):
         room_slug = request.data.get("room_slug")
@@ -318,6 +320,14 @@ class TaskListCreateView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         room = get_object_or_404(Room, slug=self.kwargs['room_slug'])
         serializer.save(room=room, created_by=self.request.user)
+
+    def get_queryset(self):
+        room = get_object_or_404(Room, slug=self.kwargs['room_slug']) 
+        user_created_tasks = Task.objects.filter(
+            created_by = self.request.user,
+            room = room
+        )
+        return user_created_tasks
 
     def get_serializer_context(self):
         # Pass the room to the serializer context

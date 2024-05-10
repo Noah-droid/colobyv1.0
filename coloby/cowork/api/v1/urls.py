@@ -1,6 +1,6 @@
 from django.urls import path
 from django.views.generic import TemplateView
-from cowork import views
+from coloby.cowork.api.v1 import views
 # from .views import (
 #     UploadFileView,
 #     SwitchBranchView,

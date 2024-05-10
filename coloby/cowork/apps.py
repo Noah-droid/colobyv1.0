@@ -3,7 +3,7 @@ from django.apps import AppConfig
 
 class ChatConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
-    name = "cowork"
+    name = "coloby.cowork"
 
     def ready(self):
-        import cowork.signals
+        import coloby.cowork.signals
