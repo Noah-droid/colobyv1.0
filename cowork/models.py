@@ -187,7 +187,7 @@ class Task(BaseModel):
     assigned_to = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='tasks_created')
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=PENDING)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=UNDONE)
 
     def __str__(self):
         return self.title
