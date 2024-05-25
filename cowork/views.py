@@ -332,6 +332,15 @@ class TaskRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = TaskSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    def get_object(self):
+        task_id = self.kwargs["pk"]
+        task_obj = Task.objects.filter(id=task_id).first()
+        
+        return task_obj
+
+    def delete(self, request, *args, **kwargs):
+        return super().delete(request, *args, **kwargs)
+
 
 class CommentCreateView(generics.CreateAPIView):
     queryset = Comment.objects.all()

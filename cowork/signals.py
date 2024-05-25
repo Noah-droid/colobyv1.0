@@ -1,7 +1,8 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from .models import Message, Task, Room, Notification, Comment
-
+from django.core.mail import send_mail
+from django.conf import settings
 @receiver(post_save, sender=Message)
 def create_message_notification(sender, instance, created, **kwargs):
     if created:
@@ -26,8 +27,7 @@ def create_message_notification(sender, instance, created, **kwargs):
 #             for participant in participants
 #         ])
 
-from django.core.mail import send_mail
-from django.conf import settings
+
 
 @receiver(post_save, sender=Task)
 def create_task_notification(sender, instance, created, **kwargs):
