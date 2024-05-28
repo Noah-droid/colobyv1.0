@@ -104,8 +104,8 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
 
 
 class RoomCreateJoinView(APIView):
-    # permission_classes = [IsAuthenticated]
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [IsAuthenticated]
+    
 
     def post(self, request, *args, **kwargs):
         action = request.data.get("action")
