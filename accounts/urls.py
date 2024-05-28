@@ -3,7 +3,6 @@ from django.contrib.auth import views as auth_views
 import accounts.views as user_views
 from accounts.views import (
     UserRegistrationView,
-    LogoutView, 
     GoogleLogin, 
     SignInAPIView, 
     ChangePasswordView,
@@ -25,7 +24,6 @@ urlpatterns = [
         name="logout",
     ),
     path('refresh-token/', RefreshAccessTokenAPIView.as_view(), name='refresh-token'),
-    path('log-out/', LogoutView.as_view(), name="log-out"),
 
     # OAUTH LOGINS
     path("google-login/", GoogleLogin.as_view(), name="google-login"),
