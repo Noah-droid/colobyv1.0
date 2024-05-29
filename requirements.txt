@@ -5,9 +5,6 @@ async-timeout==4.0.3
 attrs==22.2.0
 autobahn==23.1.1
 Automat==22.10.0
-backports.zoneinfo==0.2.1
-certifi==2023.7.22
-cffi==1.16.0
 channels==4.0.0
 charset-normalizer==3.2.0
 colorama==0.4.6
@@ -19,7 +16,7 @@ daphne==4.0.0
 defusedxml==0.7.1
 dj-database-url==2.1.0
 dj-rest-auth==4.0.1
-Django==4.2
+Django==3.2
 django-allauth==0.50.0
 django-debug-toolbar
 django-rest-swagger==2.2.0
