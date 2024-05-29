@@ -105,6 +105,7 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
 
 class RoomCreateJoinView(APIView):
     permission_classes = [IsAuthenticated]
+    
 
     def post(self, request, *args, **kwargs):
         action = request.data.get("action")
@@ -339,7 +340,12 @@ class TaskRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         return task_obj
 
     def delete(self, request, *args, **kwargs):
-        return super().delete(request, *args, **kwargs)
+        task_obj = self.get_object()
+        task_obj.delete()
+        
+        return Response({
+            "message": "task deleted"
+        }, status=status.HTTP_200_OK)
 
 
 class CommentCreateView(generics.CreateAPIView):

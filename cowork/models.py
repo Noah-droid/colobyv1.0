@@ -43,7 +43,7 @@ class SoftDeletionManager(models.Manager):
     def __init__(self, *args, **kwargs):
         super(SoftDeletionManager, self).__init__(*args, **kwargs)
 
-    def get_queryself(self):
+    def get_queryset(self):
         return super(SoftDeletionManager, self).get_queryset().filter(deleted_at__isnull=True)
 
     def with_deleted(self):
@@ -56,7 +56,7 @@ class BaseModel(models.Model):
     This class will not be created as its own database table but will be inherited by other models
     via Meta class.
     """
-    # deleted_at = models.DateTimeField(null=True, blank=True)
+    deleted_at = models.DateTimeField(null=True, blank=True)
     objects = SoftDeletionManager()
 
     class Meta:
