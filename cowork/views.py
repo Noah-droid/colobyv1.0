@@ -327,7 +327,18 @@ class TaskListCreateView(generics.ListCreateAPIView):
             Room, slug=self.kwargs['room_slug'])
         return context
 
+class RoomTasksView(generics.ListAPIView):
+    permission_classes = [permissions.IsAuthenticated, ]
+    serializer_class = TaskSerializer
 
+    def get_queryset(self):
+        room = Room.objects.filter(slug=self.kwargs['room_slug']).first()
+        room_tasks = Task.objects.filter(room=room)
+        return room_tasks
+    
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+    
 class TaskRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
@@ -338,15 +349,19 @@ class TaskRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         task_obj = Task.objects.filter(id=task_id).first()
         
         return task_obj
-
+    
     def delete(self, request, *args, **kwargs):
-        task_obj = self.get_object()
-        task_obj.delete()
-        
-        return Response({
-            "message": "task deleted"
-        }, status=status.HTTP_200_OK)
-
+        try:
+            task_obj = self.get_object()
+            task_obj.delete()
+            return Response({
+                "message": "task deleted"
+            }, status=status.HTTP_200_OK)
+        except:
+            return Response({
+                "message": "task not found"
+            }, status=status.HTTP_404_NOT_FOUND)
+    
 
 class CommentCreateView(generics.CreateAPIView):
     queryset = Comment.objects.all()
