@@ -347,7 +347,6 @@ class TaskRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     def get_object(self):
         task_id = self.kwargs["pk"]
         task_obj = Task.objects.filter(id=task_id).first()
-        
         return task_obj
     
     def delete(self, request, *args, **kwargs):
