@@ -4,6 +4,7 @@ from rest_framework import serializers
 from allauth.account.models import EmailAddress
 from accounts.models import CustomUser
 from django.contrib.auth.hashers import check_password
+from django.http import JsonResponse, HttpResponse
 
 from cowork.models import (
     Room, Task, Comment,
@@ -76,7 +77,7 @@ class SignInSerializer(serializers.Serializer):
     """
 
     email = serializers.CharField(required=True)
-    password = serializers.CharField(required=True)
+    password = serializers.CharField(required=True, write_only=True)
 
     def validate(self, attrs: dict):
         """
@@ -84,31 +85,22 @@ class SignInSerializer(serializers.Serializer):
         """
 
         user = User.objects.filter(email=attrs["email"]).first()
+        
         if (user is None):
             raise serializers.ValidationError({
                 "sucess": "false",
                 "message": "user doesn't exist"
             })
-
-        elif (user and user.check_password(attrs["password"])):
-            return user
-
-        else:
+        
+        if user and not user.check_password(attrs["password"]):
             raise serializers.ValidationError({
-                "sucess": "false",
-                "message": "Invalid credentials"
-            })
-
-    def to_representation(self, instance):
-        user = User.objects.get(email=instance.email)
-        refresh = RefreshToken.for_user(instance)
-        return {
-            "success": ["true"],
-            "refresh_token": str(refresh),
-            "access_token": str(refresh.access_token),
-            "user_id": user.id
-        }
-
+                    "success": "false",
+                    "message": "Invalid Password"
+                }
+            ) 
+        
+        return attrs
+        
 
 class ChangePasswordSerializer(serializers.Serializer):
     """This serializer is for changing a user's password"""
@@ -289,18 +281,25 @@ class CommentSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class UpdateUserProfileSerializer(serializers.ModelSerializer):
+class ProfileSerializer(serializers.ModelSerializer):
+        
     class Meta:
         model = User
         fields = [
             'first_name',
-            'email',
             'last_name',
             'username'
         ]
 
+
     def validate(self, attrs):
         return super().validate(attrs)
+    
+
+    def update(self, instance, validated_data):
+        """Updates user profile"""
+
+        return super().update(instance, validated_data)
     
 
 
