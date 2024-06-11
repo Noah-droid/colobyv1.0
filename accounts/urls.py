@@ -7,7 +7,7 @@ from accounts.views import (
     GoogleLogin, 
     SignInAPIView, 
     ChangePasswordView,
-    UpdateUserProfileView,
+    UserProfileView,
     RefreshAccessTokenAPIView,
 )
 from . import views
@@ -17,7 +17,7 @@ urlpatterns = [
     path("register/", UserRegistrationView.as_view(), name="register"),
     
     path("log-in/", SignInAPIView.as_view(), name="log_in"),
-    path("update-profile/", UpdateUserProfileView.as_view(), name="update_profile"),
+    path("user-profile/", UserProfileView.as_view(), name="update_profile"),
     path("change-password/", ChangePasswordView.as_view(), name="change_password"),
     # path(
     #     "logout/",

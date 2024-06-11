@@ -5,14 +5,19 @@ from serializers.serializers import (
     UserRegistrationSerializer, 
     SignInSerializer, 
     ChangePasswordSerializer,
-    UpdateUserProfileSerializer,
+    ProfileSerializer,
 )
 from dj_rest_auth.registration.views import SocialLoginView
 from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
 from allauth.socialaccount.providers.oauth2.client import OAuth2Client
 from rest_framework.authtoken.models import Token
-from rest_framework.views import APIView
+from utils.utils import generate_token_lifetime
+from utils.constants import ACCESS_TOKEN_LIFETIME, REFRESH_TOKEN_LIFETIME
+from django.http import HttpResponse
+from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
+from datetime import timedelta
+
 
 from rest_framework_simplejwt.views import (
     TokenRefreshView,
@@ -38,9 +43,36 @@ class SignInAPIView(generics.GenericAPIView):
     
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid(raise_exception=True):
-            return Response(serializer.data)
+
+        if serializer.is_valid(raise_exception=True): 
+
+            user = User.objects.filter(email=serializer.validated_data['email']).first()
+            user_refresh_token = RefreshToken.for_user(user)
+
+            # This sets refresh and access_token of a user to cookies 
+            return self.set_tokens_to_cookies(user_refresh_token)
+
+    
+    def set_tokens_to_cookies(self, user_refresh_token):
+        """set user refresh and access token to cookies"""
+        response = HttpResponse(status=200)
         
+        response.set_cookie('refresh_token', 
+                            str(user_refresh_token), 
+                            httponly=True, 
+                            samesite="Lax", 
+                            expires=generate_token_lifetime(REFRESH_TOKEN_LIFETIME), 
+                            max_age=timedelta(REFRESH_TOKEN_LIFETIME))
+        
+        response.set_cookie('auth_token', 
+                            str(user_refresh_token.access_token), 
+                            httponly=True, 
+                            samesite="Lax", 
+                            expires=generate_token_lifetime(ACCESS_TOKEN_LIFETIME), 
+                            max_age=timedelta(ACCESS_TOKEN_LIFETIME))
+        
+        return response
+
 
 class ChangePasswordView(generics.GenericAPIView):
     serializer_class = ChangePasswordSerializer
@@ -81,9 +113,9 @@ class GoogleLogin(SocialLoginView):
    
 
 
-class UpdateUserProfileView(generics.RetrieveUpdateAPIView):
+class UserProfileView(generics.RetrieveUpdateAPIView):
     permission_classes = [permissions.IsAuthenticated]
-    serializer_class = UpdateUserProfileSerializer
+    serializer_class = ProfileSerializer
     http_method_names = ["get", "put"]
     
     def get_object(self):
@@ -92,8 +124,6 @@ class UpdateUserProfileView(generics.RetrieveUpdateAPIView):
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
     
-    def update(self, request, *args, **kwargs):
-        return super().update(request, *args, **kwargs)
     
 
 class RefreshAccessTokenAPIView(TokenRefreshView):

@@ -4,6 +4,7 @@ import dj_database_url
 from pathlib import Path
 from datetime import timedelta
 from decouple import config
+from utils.constants import REFRESH_TOKEN_LIFETIME, ACCESS_TOKEN_LIFETIME
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -55,6 +56,7 @@ INSTALLED_APPS = [
 
 ]
 
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -172,7 +174,8 @@ REST_FRAMEWORK = {
 # SIMPLEJWT SETTINGS
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(days=50),
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=ACCESS_TOKEN_LIFETIME),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=REFRESH_TOKEN_LIFETIME),
     "SLIDING_TOKEN_REFRESH_LIFETIME": timedelta(days=1),
     "SLIDING_TOKEN_LIFETIME": timedelta(days=60),
     "SLIDING_TOKEN_REFRESH_LIFETIME_GRACE_PERIOD": timedelta(days=1),
@@ -181,7 +184,7 @@ SIMPLE_JWT = {
     "SLIDING_TOKEN_LIFETIME_GRACE_PERIOD": timedelta(days=1),
     "SLIDING_TOKEN_SAVE_BODY": True,
 
-    "AUTH_HEADER_TYPES": ("Bearer", "Token"),
+    "AUTH_HEADER_TYPES": ("Bearer"),
 }
 
 TINYMCE_DEFAULT_CONFIG = {
