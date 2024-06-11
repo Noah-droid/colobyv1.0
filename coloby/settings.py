@@ -250,7 +250,7 @@ CORS_ALLOW_HEADERS = [header.strip() for header in config('CORS_ALLOW_HEADERS').
 #     "coloby.onrender.com"
 # ]
 
-CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = False
 
 APPEND_SLASH = False
 
