@@ -68,6 +68,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 
     "corsheaders.middleware.CorsMiddleware",
+    'accounts.middleware.TokenMiddleware',
     "debug_toolbar.middleware.DebugToolbarMiddleware",
 
     # Add the account middleware:
@@ -251,12 +252,15 @@ CORS_ALLOW_HEADERS = [header.strip() for header in config('CORS_ALLOW_HEADERS').
 # ]
 
 CSRF_COOKIE_SECURE = True
-
+CSRF_COOKIE_HTTP_ONLY = True
+CORS_EXPOSE_HEADERS = ["Content-Type", "X-CSRFToken"]
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SAMESITE = "None"
+SESSION_COOKIE_SAMESITE = "None"
 APPEND_SLASH = False
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
-# DEFAULT_FROM_EMAIL = 'admin@coloby.com'
 EMAIL_SUBJECT_PREFIX = '[Coloby]'
 EMAIL_PORT = 587
 EMAIL_HOST_USER = config('EMAIL_HOST_USER')

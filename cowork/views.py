@@ -17,7 +17,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.renderers import JSONRenderer
 from rest_framework.views import APIView
-
+from rest_framework.exceptions import NotFound
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.core.exceptions import ValidationError
@@ -312,32 +312,31 @@ def get_message(request, room_slug):
 
 
 class TaskListCreateView(generics.ListCreateAPIView):
-    queryset = Task.objects.all()
     serializer_class = TaskSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    def get_queryset(self):
+        # Get the room based on the room_slug provided in the URL
+        room_slug = self.kwargs.get('room_slug')
+        room = Room.objects.filter(slug=room_slug).first()
+        if not room:
+            raise NotFound(detail="Room not found.")
+        # Filter tasks by the retrieved room
+        return Task.objects.filter(room=room)
+
     def perform_create(self, serializer):
-        room = get_object_or_404(Room, slug=self.kwargs['room_slug'])
+        room_slug = self.kwargs.get('room_slug')
+        room = get_object_or_404(Room, slug=room_slug)
+        # Save the task with the associated room and the user who created it
         serializer.save(room=room, created_by=self.request.user)
 
     def get_serializer_context(self):
         # Pass the room to the serializer context
         context = super().get_serializer_context()
-        context['room'] = get_object_or_404(
-            Room, slug=self.kwargs['room_slug'])
+        room_slug = self.kwargs.get('room_slug')
+        room = get_object_or_404(Room, slug=room_slug)
+        context['room'] = room
         return context
-
-class RoomTasksView(generics.ListAPIView):
-    permission_classes = [permissions.IsAuthenticated, ]
-    serializer_class = TaskSerializer
-
-    def get_queryset(self):
-        room = Room.objects.filter(slug=self.kwargs['room_slug']).first()
-        room_tasks = Task.objects.filter(room=room)
-        return room_tasks
-    
-    def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
     
 class TaskRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Task.objects.all()

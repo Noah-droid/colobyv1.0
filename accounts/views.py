@@ -13,7 +13,7 @@ from allauth.socialaccount.providers.oauth2.client import OAuth2Client
 from rest_framework.authtoken.models import Token
 from utils.utils import generate_token_lifetime
 from utils.constants import ACCESS_TOKEN_LIFETIME, REFRESH_TOKEN_LIFETIME
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
 from datetime import timedelta
@@ -28,7 +28,7 @@ from rest_framework_simplejwt.views import (
 )
 from rest_framework.authtoken.models import Token
 from rest_framework_simplejwt.tokens import RefreshToken
-
+from datetime import datetime, timedelta
 User = get_user_model()
 
 class UserRegistrationView(generics.CreateAPIView):
@@ -53,25 +53,35 @@ class SignInAPIView(generics.GenericAPIView):
             return self.set_tokens_to_cookies(user_refresh_token)
 
     
+
+
     def set_tokens_to_cookies(self, user_refresh_token):
         """set user refresh and access token to cookies"""
-        response = HttpResponse(status=200)
-        
-        response.set_cookie('refresh_token', 
-                            str(user_refresh_token), 
-                            httponly=True, 
-                            samesite="Lax", 
-                            expires=generate_token_lifetime(REFRESH_TOKEN_LIFETIME), 
-                            max_age=timedelta(REFRESH_TOKEN_LIFETIME))
-        
-        response.set_cookie('auth_token', 
-                            str(user_refresh_token.access_token), 
-                            httponly=True, 
-                            samesite="Lax", 
-                            expires=generate_token_lifetime(ACCESS_TOKEN_LIFETIME), 
-                            max_age=timedelta(ACCESS_TOKEN_LIFETIME))
-        
+        response = JsonResponse({'message': 'Sign-in successful'}, status=200)
+
+        refresh_token_lifetime = timedelta(days=REFRESH_TOKEN_LIFETIME)
+        access_token_lifetime = timedelta(days=ACCESS_TOKEN_LIFETIME)
+
+        response.set_cookie(
+            'refresh_token',
+            str(user_refresh_token),
+            httponly=True,
+            samesite="Lax",
+            expires=(datetime.utcnow() + refresh_token_lifetime).strftime("%a, %d-%b-%Y %H:%M:%S GMT"),
+            max_age=int(refresh_token_lifetime.total_seconds())
+        )
+
+        response.set_cookie(
+            'auth_token',
+            str(user_refresh_token.access_token),
+            httponly=True,
+            samesite="Lax",
+            expires=(datetime.utcnow() + access_token_lifetime).strftime("%a, %d-%b-%Y %H:%M:%S GMT"),
+            max_age=int(access_token_lifetime.total_seconds())
+        )
+
         return response
+
 
 
 class ChangePasswordView(generics.GenericAPIView):
@@ -130,4 +140,33 @@ class RefreshAccessTokenAPIView(TokenRefreshView):
     """Inheriting class for refreshing access token"""
 
     def post(self, request: Request, *args, **kwargs) -> Response:
-        return super().post(request, *args, **kwargs)
+        response = super().post(request, *args, **kwargs)
+        if response.status_code == 200:
+            # Extract the new tokens from the response data
+            data = response.data
+            refresh_token = data.get('refresh')
+            access_token = data.get('access')
+            
+            # Set the new tokens in cookies
+            refresh_token_lifetime = timedelta(days=REFRESH_TOKEN_LIFETIME)
+            access_token_lifetime = timedelta(days=ACCESS_TOKEN_LIFETIME)
+
+            response.set_cookie(
+                'refresh_token',
+                refresh_token,
+                httponly=True,
+                samesite="Lax",
+                expires=(datetime.utcnow() + refresh_token_lifetime).strftime("%a, %d-%b-%Y %H:%M:%S GMT"),
+                max_age=int(refresh_token_lifetime.total_seconds())
+            )
+
+            response.set_cookie(
+                'auth_token',
+                access_token,
+                httponly=True,
+                samesite="Lax",
+                expires=(datetime.utcnow() + access_token_lifetime).strftime("%a, %d-%b-%Y %H:%M:%S GMT"),
+                max_age=int(access_token_lifetime.total_seconds())
+            )
+
+        return response
