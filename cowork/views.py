@@ -480,16 +480,34 @@ class SearchAPIView(APIView):
 
 
 class NotificationList(generics.ListAPIView):
-    queryset = Notification.objects.all()
+    permission_classes = [IsAuthenticated]
     serializer_class = NotificationSerializer
+
+    def get_queryset(self):
+        # Get the rooms the authenticated user is part of
+        user_rooms = Room.objects.filter(users=self.request.user)
+        # Filter notifications based on these rooms
+        return Notification.objects.filter(room__in=user_rooms)
 
 class NotificationDetail(generics.RetrieveAPIView):
-    queryset = Notification.objects.all()
+    permission_classes = [IsAuthenticated]
     serializer_class = NotificationSerializer
 
+    def get_queryset(self):
+        # Get the rooms the authenticated user is part of
+        user_rooms = Room.objects.filter(users=self.request.user)
+        # Filter notifications based on these rooms
+        return Notification.objects.filter(room__in=user_rooms)
+
 class MarkNotificationAsRead(generics.UpdateAPIView):
-    queryset = Notification.objects.all()
+    permission_classes = [IsAuthenticated]
     serializer_class = NotificationSerializer
+
+    def get_queryset(self):
+        # Get the rooms the authenticated user is part of
+        user_rooms = Room.objects.filter(users=self.request.user)
+        # Filter notifications based on these rooms
+        return Notification.objects.filter(room__in=user_rooms)
 
     def patch(self, request, *args, **kwargs):
         try:
@@ -499,7 +517,6 @@ class MarkNotificationAsRead(generics.UpdateAPIView):
             return JsonResponse({'status': 'Notification marked as read.'}, status=status.HTTP_200_OK)
         except Exception as e:
             return JsonResponse({'error': f"An unexpected error occurred: {str(e)}"}, status=500)
-        
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
